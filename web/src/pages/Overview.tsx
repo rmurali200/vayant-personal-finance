@@ -6,9 +6,6 @@ import { useSettings } from "../lib/settings";
 import { Card, ErrorNote, MetricCard, Progress, TransactionRow } from "../ui/components";
 import { categorySection } from "./Transactions";
 
-// One row of goals on desktop; the Goals page has the rest.
-const GOALS_SHOWN = 3;
-
 export function Overview() {
   const { currency } = useSettings();
   const nw = useApi<NetWorth>(`/net-worth${qs({ currency })}`);
@@ -39,26 +36,24 @@ export function Overview() {
         <MetricCard label="Spending this month" value={thisMonth?.expenses ?? 0} section="spend" currency={currency} />
       </div>
 
-      <Card title="Goals" action={goals.data && goals.data.length > GOALS_SHOWN
-        ? <a className="link" href={href("/goals")}>All {goals.data.length} goals</a>
-        : <a className="link" href={href("/goals")}>Details</a>}>
-        {goals.data?.length === 0
-          ? <p className="vy-muted">No goals yet. A goal earmarks part of one or more account balances toward a target.</p>
-          : <div className="goal-strip">
-              {goals.data?.slice(0, GOALS_SHOWN).map((g) => (
-                <Progress key={g.id} kind="goal" section="goals" label={g.name} value={g.current} max={g.target} currency={g.currency} />
-              ))}
-            </div>}
-      </Card>
-
-      <Card title={`Recent ${currency} transactions`} action={<a className="link" href={href("/transactions")}>View all</a>}>
-        {recent.data?.items.length === 0 && <p className="vy-muted">No transactions in {currency} accounts.</p>}
-        {recent.data?.items.map((t) => (
-          <TransactionRow key={t.id} merchant={t.payee} amount={t.amount} currency={t.currency} date={formatDay(t.date)}
-            category={t.category_name} section={categorySection(t.category_kind)}
-            extra={<span className="small vy-muted hide-narrow">{t.account_name}</span>} />
-        ))}
-      </Card>
+      <div className="columns">
+        <Card title="Goals" action={<a className="link" href={href("/goals")}>Details</a>}>
+          {goals.data?.length === 0
+            ? <p className="vy-muted">No goals yet. A goal earmarks part of one or more account balances toward a target.</p>
+            : <div className="stack">
+                {goals.data?.map((g) => (
+                  <Progress key={g.id} kind="goal" section="goals" label={g.name} value={g.current} max={g.target} currency={g.currency} />
+                ))}
+              </div>}
+        </Card>
+        <Card title={`Recent ${currency} transactions`} action={<a className="link" href={href("/transactions")}>View all</a>}>
+          {recent.data?.items.length === 0 && <p className="vy-muted">No transactions in {currency} accounts.</p>}
+          {recent.data?.items.map((t) => (
+            <TransactionRow key={t.id} merchant={t.payee} amount={t.amount} currency={t.currency} date={formatDay(t.date)}
+              category={t.category_name} section={categorySection(t.category_kind)} />
+          ))}
+        </Card>
+      </div>
     </>
   );
 }

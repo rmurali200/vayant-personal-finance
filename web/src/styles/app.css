@@ -159,6 +159,4 @@ a.breakdown-sub:hover { background: var(--surface-inset); }
 .table-holdings th:nth-child(6) { width: 140px; }
 .table-holdings th:nth-child(7) { width: 76px; }
 .table-holdings td:first-child > div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.goal-strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--space-4) var(--space-8); }
-.goal-strip .vy-progress-head { flex-wrap: wrap; column-gap: var(--space-3); }
 @media (max-width: 899px) { .vy-txn-extra { grid-template-columns: 36px 1fr auto; } }
