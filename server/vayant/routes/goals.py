@@ -13,7 +13,8 @@ EXPENSE_LOOKBACK_MONTHS = 6
 def list_goals(db: DB):
     goals = db.execute("""
         SELECT id, name, kind, currency, target_amount, target_months, target_date
-        FROM goals WHERE NOT is_archived ORDER BY kind DESC, id""").fetchall()
+        FROM goals WHERE NOT is_archived
+        ORDER BY kind = 'reserve' DESC, target_date NULLS LAST, id""").fetchall()
     allocations = db.execute("""
         SELECT ga.goal_id, ga.account_id, a.name AS account_name, a.currency AS account_currency,
                ga.amount, ga.percent, n.native AS contributed_native,

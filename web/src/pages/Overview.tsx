@@ -1,18 +1,19 @@
-import { useState } from "react";
 import { LineChart } from "../charts/LineChart";
 import { qs, useApi, type CashFlow, type Goal, type NetWorth, type TransactionPage } from "../lib/api";
 import { formatDay, monthStart, today } from "../lib/format";
 import { href } from "../lib/router";
 import { useSettings } from "../lib/settings";
-import { Card, CurrencyTabs, ErrorNote, MetricCard, Progress, TransactionRow } from "../ui/components";
+import { Card, ErrorNote, MetricCard, Progress, TransactionRow } from "../ui/components";
 import { categorySection } from "./Transactions";
+
+// One row of goals on desktop; the Goals page has the rest.
+const GOALS_SHOWN = 3;
 
 export function Overview() {
   const { currency } = useSettings();
   const nw = useApi<NetWorth>(`/net-worth${qs({ currency })}`);
   const flow = useApi<CashFlow>(`/cash-flow${qs({ currency, start: monthStart(), end: today() })}`);
-  const [txnCurrency, setTxnCurrency] = useState<string | null>(null);
-  const recent = useApi<TransactionPage>(`/transactions${qs({ limit: 8, currency: txnCurrency ?? currency })}`);
+  const recent = useApi<TransactionPage>(`/transactions${qs({ limit: 8, currency })}`);
   const goals = useApi<Goal[]>("/goals");
 
   const s = nw.data?.series ?? [];
@@ -38,23 +39,26 @@ export function Overview() {
         <MetricCard label="Spending this month" value={thisMonth?.expenses ?? 0} section="spend" currency={currency} />
       </div>
 
-      <div className="columns">
-        <Card title="Recent transactions" action={
-          <CurrencyTabs showCounts={false} counts={recent.data?.by_currency ?? {}} value={txnCurrency ?? currency} onChange={setTxnCurrency} />}>
-          {recent.data?.items.map((t) => (
-            <TransactionRow key={t.id} merchant={t.payee} amount={t.amount} currency={t.currency} date={formatDay(t.date)}
-              category={t.category_name} section={categorySection(t.category_kind)} />
-          ))}
-          <div className="more"><a className="link" href={href("/transactions")}>View all transactions</a></div>
-        </Card>
-        <Card title="Goals" action={<a className="link" href={href("/goals")}>Details</a>}>
-          <div className="stack">
-            {goals.data?.map((g) => (
-              <Progress key={g.id} kind="goal" section="goals" label={g.name} value={g.current} max={g.target} currency={g.currency} />
-            ))}
-          </div>
-        </Card>
-      </div>
+      <Card title="Goals" action={goals.data && goals.data.length > GOALS_SHOWN
+        ? <a className="link" href={href("/goals")}>All {goals.data.length} goals</a>
+        : <a className="link" href={href("/goals")}>Details</a>}>
+        {goals.data?.length === 0
+          ? <p className="vy-muted">No goals yet. A goal earmarks part of one or more account balances toward a target.</p>
+          : <div className="goal-strip">
+              {goals.data?.slice(0, GOALS_SHOWN).map((g) => (
+                <Progress key={g.id} kind="goal" section="goals" label={g.name} value={g.current} max={g.target} currency={g.currency} />
+              ))}
+            </div>}
+      </Card>
+
+      <Card title={`Recent ${currency} transactions`} action={<a className="link" href={href("/transactions")}>View all</a>}>
+        {recent.data?.items.length === 0 && <p className="vy-muted">No transactions in {currency} accounts.</p>}
+        {recent.data?.items.map((t) => (
+          <TransactionRow key={t.id} merchant={t.payee} amount={t.amount} currency={t.currency} date={formatDay(t.date)}
+            category={t.category_name} section={categorySection(t.category_kind)}
+            extra={<span className="small vy-muted hide-narrow">{t.account_name}</span>} />
+        ))}
+      </Card>
     </>
   );
 }
