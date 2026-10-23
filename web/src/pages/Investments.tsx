@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { StackBar } from "../charts/StackBar";
 import { qs, useApi, type Holding } from "../lib/api";
+import { currencyName, groupByCurrency } from "../lib/currency";
 import { formatMoney, formatMonth, formatPercent, sentence } from "../lib/format";
 import { useSettings } from "../lib/settings";
-import { Card, Empty, ErrorNote, MetricCard } from "../ui/components";
+import { Amount, Card, Empty, ErrorNote, MetricCard } from "../ui/components";
 
 // Validated categorical order (dataviz checks pass in both themes). Fixed per asset class, never by rank.
 const CLASSES: Record<string, { label: string; color: string }> = {
@@ -72,41 +73,58 @@ export function Investments() {
           ))}
         </div>
       </Card>
-      <Card title="Holdings">
-        <div className="table-wrap">
-          <table className="table">
-            <thead><tr>
-              <th>Holding</th><th className="hide-narrow">Type</th><th className="hide-narrow">Account</th>
-              <th className="num hide-narrow">Quantity</th><th className="num">Value</th><th className="num">Gain</th>
-            </tr></thead>
-            <tbody>
-              {holdings.map((h) => {
-                const gain = h.value != null && h.cost_basis ? (h.value - h.cost_basis) / h.cost_basis : null;
-                return (
-                  <tr key={`${h.account_id}-${h.security_id}`}>
-                    <td>
-                      <div className="body-strong">{h.symbol ?? h.name}</div>
-                      <div className="small vy-muted">
-                        {h.symbol ? h.name : [h.interest_rate && `${Number(h.interest_rate)}%`, h.maturity_date && `matures ${formatMonth(h.maturity_date, "long")}`].filter(Boolean).join(" · ")}
-                      </div>
-                    </td>
-                    <td className="hide-narrow">{CLASSES[h.asset_class]?.label} · {TYPES[h.security_type ?? "other"]}</td>
-                    <td className="hide-narrow">{h.account_name}</td>
-                    <td className="num hide-narrow">{DEPOSITS.has(h.security_type ?? "") ? "—" : Number(h.quantity).toLocaleString()}</td>
-                    <td className="num">
-                      {formatMoney(h.value_converted ?? 0, { currency })}
-                      {h.currency !== currency && <div className="small vy-muted">{formatMoney(h.value ?? 0, { currency: h.currency })}</div>}
-                    </td>
-                    <td className={`num ${gain && Math.abs(gain) >= 0.0005 ? (gain > 0 ? "vy-tone-positive" : "vy-tone-negative") : ""}`}>
-                      {gain == null ? "—" : `${gain > 0 ? "+" : ""}${formatPercent(gain, 1)}`}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+      {groupByCurrency(holdings, (h) => h.currency).map(([cur, items]) => (
+        <CurrencyHoldings key={cur} currency={cur} holdings={items} reporting={currency} />
+      ))}
     </>
+  );
+}
+
+/** Holdings priced in one currency, shown only in that currency. */
+function CurrencyHoldings({ currency, holdings, reporting }: { currency: string; holdings: Holding[]; reporting: string }) {
+  const total = holdings.reduce((s, h) => s + (h.value ?? 0), 0);
+  const converted = holdings.reduce((s, h) => s + (h.value_converted ?? 0), 0);
+  return (
+    <Card
+      title={<>{currencyName(currency)} holdings <span className="vy-muted">{currency}</span></>}
+      action={
+        <div className="row-end">
+          <Amount value={total} currency={currency} decimals={0} size="md" />
+          {currency !== reporting && <span className="small vy-muted figure">≈ {formatMoney(converted, { currency: reporting, decimals: 0 })}</span>}
+        </div>
+      }>
+      <div className="table-wrap">
+        <table className="table table-holdings">
+          <thead><tr>
+            <th>Holding</th><th className="hide-narrow">Type</th><th className="hide-narrow">Account</th>
+            <th className="num hide-narrow">Quantity</th><th className="num hide-narrow">Price</th><th className="num">Value</th><th className="num">Gain</th>
+          </tr></thead>
+          <tbody>
+            {holdings.toSorted((a, b) => (b.value ?? 0) - (a.value ?? 0)).map((h) => {
+              const gain = h.value != null && h.cost_basis ? (h.value - h.cost_basis) / h.cost_basis : null;
+              const deposit = DEPOSITS.has(h.security_type ?? "");
+              return (
+                <tr key={`${h.account_id}-${h.security_id}`}>
+                  <td>
+                    <div className="body-strong">{h.symbol ?? h.name}</div>
+                    <div className="small vy-muted">
+                      {h.symbol ? h.name : [h.interest_rate && `${Number(h.interest_rate)}%`, h.maturity_date && `matures ${formatMonth(h.maturity_date, "long")}`].filter(Boolean).join(" · ")}
+                    </div>
+                  </td>
+                  <td className="hide-narrow">{CLASSES[h.asset_class]?.label} · {TYPES[h.security_type ?? "other"]}</td>
+                  <td className="hide-narrow">{h.account_name}</td>
+                  <td className="num hide-narrow">{deposit ? "—" : Number(h.quantity).toLocaleString()}</td>
+                  <td className="num hide-narrow">{deposit || h.price == null ? "—" : formatMoney(h.price, { currency })}</td>
+                  <td className="num">{formatMoney(h.value ?? 0, { currency })}</td>
+                  <td className={`num ${gain && Math.abs(gain) >= 0.0005 ? (gain > 0 ? "vy-tone-positive" : "vy-tone-negative") : ""}`}>
+                    {gain == null ? "—" : `${gain > 0 ? "+" : ""}${formatPercent(gain, 1)}`}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </Card>
   );
 }

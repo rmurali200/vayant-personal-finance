@@ -322,6 +322,8 @@ export interface components {
             amount: number | null;
             /** Percent */
             percent: string | null;
+            /** Contributed Native */
+            contributed_native: number;
             /** Contributed */
             contributed: number;
         };
@@ -422,6 +424,10 @@ export interface components {
         TransactionPage: {
             /** Total */
             total: number;
+            /** By Currency */
+            by_currency: {
+                [key: string]: number;
+            };
             /** Items */
             items: components["schemas"]["Transaction"][];
         };
@@ -547,6 +553,8 @@ export interface operations {
         parameters: {
             query?: {
                 account_id?: number | null;
+                /** @description Account currency */
+                currency?: string | null;
                 /** @description Includes the category's children */
                 category_id?: number | null;
                 start?: string | null;

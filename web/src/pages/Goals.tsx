@@ -1,4 +1,5 @@
 import { useApi, type Goal } from "../lib/api";
+import { groupByCurrency } from "../lib/currency";
 import { formatMoney, formatMonth } from "../lib/format";
 import { Card, Empty, ErrorNote, Progress, SectionTag } from "../ui/components";
 
@@ -28,7 +29,10 @@ function GoalCard({ goal: g }: { goal: Goal }) {
         </p>
         <div>
           <div className="group-head"><span className="vy-eyebrow">Funded from</span></div>
-          {g.allocations.map((a) => (
+          {new Set(g.allocations.map((a) => a.account_currency)).size > 1 && (
+            <p className="small vy-muted funded-note">Each account in its own currency; progress converts to {g.currency} at today's rates.</p>
+          )}
+          {groupByCurrency(g.allocations, (a) => a.account_currency).flatMap(([, list]) => list).map((a) => (
             <div key={a.account_id} className="row">
               <div className="row-main">
                 <span className="body-strong">{a.account_name}</span>
@@ -36,7 +40,7 @@ function GoalCard({ goal: g }: { goal: Goal }) {
                   {a.percent != null ? `${Number(a.percent)}% of balance` : `Fixed ${formatMoney(a.amount ?? 0, { currency: a.account_currency, decimals: 0 })}`}
                 </span>
               </div>
-              <span className="figure">{m(a.contributed)}</span>
+              <span className="figure">{formatMoney(a.contributed_native, { currency: a.account_currency, decimals: 0 })}</span>
             </div>
           ))}
         </div>

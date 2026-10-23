@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LineChart } from "../charts/LineChart";
 import { qs, useApi, type Account, type NetWorth } from "../lib/api";
+import { currencyName, groupByCurrency } from "../lib/currency";
 import { formatDay, formatMoney, isoDate } from "../lib/format";
 import { useSettings } from "../lib/settings";
 import { Amount, Card, ErrorNote, MetricCard, Segmented } from "../ui/components";
@@ -38,43 +39,68 @@ export function Accounts() {
         <LineChart label="Net worth over time" currency={currency} color="var(--net-worth)"
           points={s.map((p) => ({ date: p.date, value: p.net_worth, details: [{ label: "Assets", value: p.assets }, { label: "Liabilities", value: p.liabilities }] }))} />
       </Card>
-      <div className="columns">
-        <AccountList title="Assets" accounts={accounts.data?.filter((a) => a.classification === "asset")} currency={currency} />
-        <AccountList title="Liabilities" accounts={accounts.data?.filter((a) => a.classification === "liability")} currency={currency} />
-      </div>
+      {groupByCurrency(accounts.data ?? [], (a) => a.currency).map(([cur, items]) => (
+        <CurrencyAccounts key={cur} currency={cur} accounts={items} reporting={currency} />
+      ))}
     </>
   );
 }
 
-function AccountList({ title, accounts = [], currency }: { title: string; accounts?: Account[]; currency: string }) {
+/** All accounts held in one currency, in that currency only. */
+function CurrencyAccounts({ currency, accounts, reporting }: { currency: string; accounts: Account[]; reporting: string }) {
+  const counted = accounts.filter((a) => a.in_net_worth);
+  const sum = (list: Account[], key: "balance" | "balance_converted") => list.reduce((s, a) => s + (a[key] ?? 0), 0);
+  const signed = (key: "balance" | "balance_converted") =>
+    sum(counted.filter((a) => a.classification === "asset"), key) - sum(counted.filter((a) => a.classification === "liability"), key);
+  return (
+    <Card
+      title={<>{currencyName(currency)} <span className="vy-muted">{currency}</span></>}
+      action={
+        <div className="row-end">
+          <span className="small vy-muted">Net</span>
+          <Amount value={signed("balance")} currency={currency} decimals={0} size="md" />
+          {currency !== reporting && <span className="small vy-muted figure">≈ {formatMoney(signed("balance_converted"), { currency: reporting, decimals: 0 })}</span>}
+        </div>
+      }>
+      <div className="columns">
+        <AccountList title="Assets" accounts={accounts.filter((a) => a.classification === "asset")} currency={currency} />
+        <AccountList title="Liabilities" accounts={accounts.filter((a) => a.classification === "liability")} currency={currency} />
+      </div>
+    </Card>
+  );
+}
+
+function AccountList({ title, accounts, currency }: { title: string; accounts: Account[]; currency: string }) {
+  if (!accounts.length) return <div><div className="list-title"><h3 className="title-3">{title}</h3></div><p className="small vy-muted">None in {currency}</p></div>;
   const groups = Object.entries(GROUPS)
     .map(([type, label]) => ({ label, items: accounts.filter((a) => a.type === type) }))
     .filter((g) => g.items.length);
-  const total = accounts.reduce((s, a) => s + (a.in_net_worth ? a.balance_converted ?? 0 : 0), 0);
+  const m = (v: number) => formatMoney(v, { currency, decimals: 0 });
   return (
-    <Card title={title} action={<Amount value={total} currency={currency} decimals={0} size="md" />}>
+    <div>
+      <div className="list-title">
+        <h3 className="title-3">{title}</h3>
+        <span className="figure body-strong">{m(accounts.reduce((s, a) => s + (a.in_net_worth ? a.balance ?? 0 : 0), 0))}</span>
+      </div>
       {groups.map((g) => (
         <div key={g.label} className="group">
           <div className="group-head">
             <span className="vy-eyebrow">{g.label}</span>
-            <span className="vy-muted figure">{formatMoney(g.items.reduce((s, a) => s + (a.balance_converted ?? 0), 0), { currency, decimals: 0 })}</span>
+            <span className="vy-muted figure">{m(g.items.reduce((s, a) => s + (a.balance ?? 0), 0))}</span>
           </div>
           {g.items.map((a) => (
             <div key={a.id} className="row">
               <div className="row-main">
                 <span className="body-strong">{a.name}</span>
                 <span className="small vy-muted">
-                  {[a.institution, a.country, a.mask && `••${a.mask}`, a.balance_date && `Updated ${formatDay(a.balance_date)}`].filter(Boolean).join(" · ")}
+                  {[a.institution, a.mask && `••${a.mask}`, a.balance_date && `Updated ${formatDay(a.balance_date)}`].filter(Boolean).join(" · ")}
                 </span>
               </div>
-              <div className="row-end">
-                <Amount value={a.balance_converted ?? 0} currency={currency} />
-                {a.currency !== currency && <span className="small vy-muted figure">{formatMoney(a.balance ?? 0, { currency: a.currency })}</span>}
-              </div>
+              <Amount value={a.balance ?? 0} currency={currency} />
             </div>
           ))}
         </div>
       ))}
-    </Card>
+    </div>
   );
 }

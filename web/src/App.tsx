@@ -10,12 +10,13 @@ import { Transactions } from "./pages/Transactions";
 import { Segmented } from "./ui/components";
 import { Icon, type IconName } from "./ui/Icon";
 
-const PAGES: { path: string; title: string; icon: IconName; render: (p: URLSearchParams) => ReactNode }[] = [
-  { path: "/", title: "Overview", icon: "overview", render: () => <Overview /> },
-  { path: "/accounts", title: "Accounts", icon: "accounts", render: () => <Accounts /> },
+// `converts`: the page shows amounts in the reporting currency, so it gets the currency switch.
+const PAGES: { path: string; title: string; icon: IconName; converts?: boolean; render: (p: URLSearchParams) => ReactNode }[] = [
+  { path: "/", title: "Overview", icon: "overview", converts: true, render: () => <Overview /> },
+  { path: "/accounts", title: "Accounts", icon: "accounts", converts: true, render: () => <Accounts /> },
   { path: "/transactions", title: "Transactions", icon: "transactions", render: (p) => <Transactions params={p} /> },
-  { path: "/cash-flow", title: "Cash flow", icon: "cashflow", render: () => <CashFlow /> },
-  { path: "/investments", title: "Investments", icon: "investments", render: () => <Investments /> },
+  { path: "/cash-flow", title: "Cash flow", icon: "cashflow", converts: true, render: () => <CashFlow /> },
+  { path: "/investments", title: "Investments", icon: "investments", converts: true, render: () => <Investments /> },
   { path: "/goals", title: "Goals", icon: "goals", render: () => <Goals /> },
 ];
 
@@ -46,7 +47,7 @@ export function App() {
           <a className="brand brand-compact" href={href("/")} aria-label="Vayant overview"><img src="/vayant-mark.webp" alt="" width={28} height={28} /></a>
           <h1 className="title-1">{page.title}</h1>
           <div className="topbar-tools">
-            <Segmented label="Reporting currency" options={CURRENCIES} value={currency as (typeof CURRENCIES)[number]} onChange={setCurrency} />
+            {page.converts && <Segmented label="Reporting currency" options={CURRENCIES} value={currency as (typeof CURRENCIES)[number]} onChange={setCurrency} />}
             <button type="button" className="icon-btn" onClick={() => setTheme(dark ? "light" : "dark")}
               aria-label={dark ? "Switch to light theme" : "Switch to dark theme"}>
               <Icon name={dark ? "sun" : "moon"} />

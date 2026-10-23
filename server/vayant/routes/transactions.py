@@ -28,6 +28,7 @@ def list_categories(db: DB):
 def list_transactions(
     db: DB,
     account_id: int | None = None,
+    currency: str | None = Query(None, pattern="^[A-Z]{3}$", description="Account currency"),
     category_id: int | None = Query(None, description="Includes the category's children"),
     start: date | None = None,
     end: date | None = None,
@@ -51,13 +52,20 @@ def list_transactions(
     if q:
         where.append("(t.payee ILIKE %(q)s OR t.notes ILIKE %(q)s)")
         params["q"] = f"%{q}%"
+    # Counts per currency use every filter except currency, so each tab can show its count.
+    unscoped = TXN_SELECT + (" WHERE " + " AND ".join(where) if where else "")
+    by_currency = {r["currency"]: r["n"] for r in db.execute(
+        f"SELECT currency, count(*) AS n FROM ({unscoped}) x GROUP BY currency", params)}
+    if currency:
+        where.append("a.currency = %(currency)s")
+        params["currency"] = currency
     sql = TXN_SELECT + (" WHERE " + " AND ".join(where) if where else "")
-    total = db.execute(f"SELECT count(*) AS n FROM ({sql}) x", params).fetchone()["n"]
+    total = by_currency.get(currency, 0) if currency else sum(by_currency.values())
     items = db.execute(
         sql + " ORDER BY t.date DESC, t.id DESC LIMIT %(limit)s OFFSET %(offset)s",
         params | {"limit": limit, "offset": offset},
     ).fetchall()
-    return {"total": total, "items": items}
+    return {"total": total, "by_currency": by_currency, "items": items}
 
 
 @router.patch("/transactions/{txn_id}", response_model=Transaction)

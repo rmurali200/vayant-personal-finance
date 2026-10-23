@@ -143,3 +143,19 @@ a.breakdown-sub:hover { background: var(--surface-inset); }
   .topbar-tools .segmented button { padding: 6px var(--space-2); }
   .topbar .title-1 { font-size: 18px; }
 }
+
+/* Per-currency sections */
+.list-title { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); margin-bottom: var(--space-3); }
+.list-title h3, h3.vy-eyebrow { margin: 0; }
+.list-empty { padding-top: var(--space-3); }
+.card-head .row-end { gap: 0; }
+.funded-note { padding-top: var(--space-2); }
+/* Same column widths in every currency's holdings table, so sections line up */
+.table-holdings { table-layout: fixed; }
+.table-holdings th:nth-child(2) { width: 180px; }
+.table-holdings th:nth-child(3) { width: 130px; }
+.table-holdings th:nth-child(4) { width: 96px; }
+.table-holdings th:nth-child(5) { width: 112px; }
+.table-holdings th:nth-child(6) { width: 140px; }
+.table-holdings th:nth-child(7) { width: 76px; }
+.table-holdings td:first-child > div { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

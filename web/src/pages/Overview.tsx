@@ -1,16 +1,18 @@
+import { useState } from "react";
 import { LineChart } from "../charts/LineChart";
 import { qs, useApi, type CashFlow, type Goal, type NetWorth, type TransactionPage } from "../lib/api";
 import { formatDay, monthStart, today } from "../lib/format";
 import { href } from "../lib/router";
 import { useSettings } from "../lib/settings";
-import { Card, ErrorNote, MetricCard, Progress, TransactionRow } from "../ui/components";
+import { Card, CurrencyTabs, ErrorNote, MetricCard, Progress, TransactionRow } from "../ui/components";
 import { categorySection } from "./Transactions";
 
 export function Overview() {
   const { currency } = useSettings();
   const nw = useApi<NetWorth>(`/net-worth${qs({ currency })}`);
   const flow = useApi<CashFlow>(`/cash-flow${qs({ currency, start: monthStart(), end: today() })}`);
-  const recent = useApi<TransactionPage>("/transactions?limit=8");
+  const [txnCurrency, setTxnCurrency] = useState<string | null>(null);
+  const recent = useApi<TransactionPage>(`/transactions${qs({ limit: 8, currency: txnCurrency ?? currency })}`);
   const goals = useApi<Goal[]>("/goals");
 
   const s = nw.data?.series ?? [];
@@ -37,11 +39,13 @@ export function Overview() {
       </div>
 
       <div className="columns">
-        <Card title="Recent transactions" action={<a className="link" href={href("/transactions")}>View all</a>}>
+        <Card title="Recent transactions" action={
+          <CurrencyTabs showCounts={false} counts={recent.data?.by_currency ?? {}} value={txnCurrency ?? currency} onChange={setTxnCurrency} />}>
           {recent.data?.items.map((t) => (
             <TransactionRow key={t.id} merchant={t.payee} amount={t.amount} currency={t.currency} date={formatDay(t.date)}
               category={t.category_name} section={categorySection(t.category_kind)} />
           ))}
+          <div className="more"><a className="link" href={href("/transactions")}>View all transactions</a></div>
         </Card>
         <Card title="Goals" action={<a className="link" href={href("/goals")}>Details</a>}>
           <div className="stack">

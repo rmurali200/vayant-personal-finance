@@ -52,6 +52,7 @@ class Transaction(BaseModel):
 
 class TransactionPage(BaseModel):
     total: int
+    by_currency: dict[str, int]  # matches per account currency, ignoring the currency filter
     items: list[Transaction]
 
 
@@ -119,6 +120,7 @@ class GoalAllocation(BaseModel):
     account_currency: Currency
     amount: Money | None
     percent: Decimal | None
+    contributed_native: Money  # in the account's currency
     contributed: Money  # in the goal's currency
 
 

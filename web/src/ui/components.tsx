@@ -1,6 +1,7 @@
 // The Vayant design system's components (Button, Amount, SectionTag, Progress, MetricCard, TransactionRow),
 // ported to typed React, plus the few layout pieces the app needs. Styles: styles/components.css.
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { sortCurrencies } from "../lib/currency";
 import { formatMoney } from "../lib/format";
 
 export type Section = "net-worth" | "income" | "spend" | "assets" | "liabilities" | "goals";
@@ -121,6 +122,15 @@ export function Segmented<T extends string>({ options, value, onChange, label }:
       ))}
     </div>
   );
+}
+
+/** One tab per account currency, so amounts in different currencies never share a list. */
+export function CurrencyTabs({ counts, value, onChange, showCounts = true }: {
+  counts: Record<string, number>; value: string; onChange: (c: string) => void; showCounts?: boolean;
+}) {
+  const options = sortCurrencies(Object.keys(counts).length ? Object.keys(counts) : [value])
+    .map((c) => ({ value: c, label: showCounts && counts[c] != null ? `${c} · ${counts[c].toLocaleString()}` : c }));
+  return <Segmented label="Account currency" options={options} value={value} onChange={onChange} />;
 }
 
 export function Empty({ title, children }: { title: string; children?: ReactNode }) {

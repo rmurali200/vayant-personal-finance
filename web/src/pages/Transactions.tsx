@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { api, qs, useApi, type Account, type Category, type Transaction, type TransactionPage } from "../lib/api";
+import { useCurrencyTab } from "../lib/currency";
 import { formatDay, monthEnd, monthStart, today } from "../lib/format";
-import { Button, Card, Empty, ErrorNote, Segmented, TransactionRow, type Section } from "../ui/components";
+import { useSettings } from "../lib/settings";
+import { Button, Card, CurrencyTabs, Empty, ErrorNote, Segmented, TransactionRow, type Section } from "../ui/components";
 import { Icon } from "../ui/Icon";
 
 export const categorySection = (kind?: string | null): Section | undefined =>
@@ -30,14 +32,17 @@ export function Transactions({ params }: { params: URLSearchParams }) {
   const [period, setPeriod] = useState<Period>(custom ? "custom" : "3m");
   const [pages, setPages] = useState(1);
   const [editing, setEditing] = useState<Transaction | null>(null);
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [currency, setCurrency] = useCurrencyTab(Object.keys(counts), useSettings().currency);
 
   useEffect(() => { const t = setTimeout(() => setSearch(q), 250); return () => clearTimeout(t); }, [q]);
-  useEffect(() => setPages(1), [search, account, category, period]);
+  useEffect(() => setPages(1), [search, account, category, period, currency]);
 
   const range = period === "custom" && custom ? custom : periodRange(period);
   const list = useApi<TransactionPage>(`/transactions${qs({
-    q: search, account_id: account, category_id: category, ...range, limit: PAGE * pages,
+    q: search, currency, account_id: account, category_id: category, ...range, limit: PAGE * pages,
   })}`);
+  useEffect(() => { if (list.data) setCounts(list.data.by_currency); }, [list.data]);
   const accounts = useApi<Account[]>("/accounts");
   const categories = useApi<Category[]>("/categories");
 
@@ -53,14 +58,15 @@ export function Transactions({ params }: { params: URLSearchParams }) {
         </label>
         <select value={account} onChange={(e) => setAccount(e.target.value)} aria-label="Account">
           <option value="">All accounts</option>
-          {accounts.data?.map((a) => <option key={a.id} value={a.id}>{a.name}{a.institution ? ` (${a.institution})` : ""}</option>)}
+          {accounts.data?.filter((a) => a.currency === currency).map((a) => <option key={a.id} value={a.id}>{a.name}{a.institution ? ` (${a.institution})` : ""}</option>)}
         </select>
         <CategorySelect categories={categories.data} value={category} onChange={setCategory} emptyLabel="All categories" />
         <Segmented<Period> label="Period" value={period === "custom" ? ("" as Period) : period} onChange={setPeriod} options={PERIODS} />
       </div>
       {period === "custom" && custom && <p className="vy-muted small">Showing {formatDay(custom.start)} to {custom.end ? formatDay(custom.end) : "today"}</p>}
       <ErrorNote error={list.error} />
-      <Card title={list.data ? `${list.data.total.toLocaleString()} transactions` : "Transactions"}>
+      <Card title={list.data ? `${list.data.total.toLocaleString()} transactions` : "Transactions"}
+        action={<CurrencyTabs counts={counts} value={currency} onChange={(c) => { setCurrency(c); setAccount(""); }} />}>
         {list.data?.total === 0 && <Empty title="No transactions match">Try a different period or clear the search.</Empty>}
         {[...byDate].map(([date, items]) => (
           <div key={date} className="group">

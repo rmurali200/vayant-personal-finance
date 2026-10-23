@@ -56,6 +56,19 @@ def test_goal_progress_caps_fixed_allocations_at_balance(client, db):
     db.commit()
     [g] = client.get("/api/goals").json()
     assert (g["target"], g["current"]) == (20000, 8000)
+    assert sorted(a["contributed_native"] for a in g["allocations"]) == [3000, 5000]
+
+
+def test_transactions_filter_by_currency_and_count_each(client, db):
+    usd = add_account(db, "Checking", "cash", "USD", [])
+    inr = add_account(db, "Savings", "cash", "INR", [])
+    for aid, n in ((usd, 3), (inr, 2)):
+        for _ in range(n):
+            db.execute("INSERT INTO transactions (account_id, date, amount, payee) VALUES (%s,'2026-03-05',-1,'x')", (aid,))
+    db.commit()
+    page = client.get("/api/transactions", params={"currency": "INR"}).json()
+    assert page["total"] == 2 and {t["currency"] for t in page["items"]} == {"INR"}
+    assert page["by_currency"] == {"USD": 3, "INR": 2}
 
 
 def test_update_transaction(client, db):

@@ -9,13 +9,13 @@ A personal finance app that runs on your own computer. It tracks transactions, i
 | Screen | Shows |
 | --- | --- |
 | Overview | Net worth, assets, liabilities, 12-month trend, this month's income and spending, recent transactions, goal progress |
-| Accounts | Net worth over 3M–2Y, every account grouped by type, balances in the account's currency and the reporting currency |
-| Transactions | Search, filter by account, category and period; edit payee, category and notes |
+| Accounts | Net worth over 3M–2Y; one section per currency with that currency's assets, liabilities and net |
+| Transactions | One tab per account currency; search, filter by account, category and period; edit payee, category and notes |
 | Cash flow | Income vs spending by month, savings rate, category breakdown that opens the matching transactions |
-| Investments | Allocation by asset class, then by security type (ETF, mutual fund, stock, bond, GIC, FD); holdings with gain since purchase |
+| Investments | Allocation by asset class, then by security type (ETF, mutual fund, stock, bond, GIC, FD); holdings in one table per currency, with gain since purchase |
 | Goals | Savings goals and reserve funds, each funded by a share or fixed amount of one or more accounts |
 
-Switch the reporting currency (USD, CAD, INR) from the header. Historical values convert at the exchange rate of their own date.
+Lists never mix currencies: accounts, holdings and transactions each get a section or tab per currency and show amounts in that currency only. Totals and charts that combine currencies (net worth, cash flow, allocation) use the reporting currency (USD, CAD or INR), switched from the header; historical values convert at the exchange rate of their own date.
 
 ## Stack
 
