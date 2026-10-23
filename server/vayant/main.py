@@ -10,7 +10,7 @@ from . import fx
 from .config import FX_AUTO_REFRESH
 from .db import connect
 from .migrate import migrate
-from .routes import accounts, fx as fx_routes, goals, investments, transactions
+from .routes import accounts, fx as fx_routes, goals, imports, investments, transactions
 
 log = logging.getLogger("vayant")
 WEB_DIST = Path(__file__).resolve().parents[2] / "web" / "dist"
@@ -44,7 +44,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="Vayant", lifespan=lifespan)
-for r in (accounts, transactions, investments, goals, fx_routes):
+for r in (accounts, transactions, investments, goals, imports, fx_routes):
     app.include_router(r.router, prefix="/api")
 
 # In production the built web app is served from here; in development Vite serves it and proxies /api.

@@ -2,7 +2,7 @@
 
 A personal finance app that runs on your own computer. It tracks transactions, income, spending, investments, net worth (in USD, CAD and INR), reserve funds and goals across accounts in several countries. Your data stays in a local PostgreSQL database; nothing is sent to a cloud service.
 
-**Status:** MVP in progress. The UI and API run on generated sample data. Importing real data (CSV first, then an aggregator) is next.
+**Status:** MVP in progress. Runs on generated sample data; real transactions come in through CSV or OFX/QFX import. Connecting an aggregator is next.
 
 ## What it does
 
@@ -14,6 +14,7 @@ A personal finance app that runs on your own computer. It tracks transactions, i
 | Cash flow | Income vs spending by month, savings rate, category breakdown that opens the matching transactions |
 | Investments | Allocation by asset class, then by security type (ETF, mutual fund, stock, bond, GIC, FD); holdings in one table per currency, with gain since purchase |
 | Goals | Savings goals and reserve funds, each funded by a share or fixed amount of one or more accounts |
+| Import (from Accounts) | CSV or OFX/QFX files from any bank: column mapping remembered per account, duplicate detection, suggested categories, review before saving, undo per import |
 
 Lists never mix currencies: accounts, holdings and transactions each get a section or tab per currency and show amounts in that currency only. Totals and charts that combine currencies (net worth, cash flow, allocation) use the reporting currency (USD, CAD or INR), switched from the header; historical values convert at the exchange rate of their own date.
 
@@ -81,6 +82,20 @@ The repository holds no credentials or keys. Anything account-specific is entere
 
 The app makes one outbound request: once a day it fetches exchange rates from [open.er-api.com](https://www.exchangerate-api.com/docs/free) (free, no key). If that fails it keeps using the last stored rates. Fonts are self-hosted.
 
+## Importing transactions
+
+Banks have no common CSV layout, so the importer works it out per file and lets you correct it:
+
+- **Finding the data:** skips preamble and summary lines, finds the header (or works without one), and detects the delimiter and date format. Day-first vs month-first is settled from the dates themselves, or asked when every date fits both.
+- **Columns:** guesses date, description, and either one signed amount or separate money-out/money-in columns, plus an optional running balance. Amounts like `1,23,456.00`, `(84.20)`, `84.20 DR` and `₹`/`CA$` prefixes are understood. Card exports that show charges as positive are flipped. The mapping is saved per account and reused while the file's header stays the same.
+- **OFX/QFX:** read directly (SGML 1.x and XML 2.x), using the bank's transaction ids and reported balance.
+- **Duplicates:** each row gets a fingerprint, so re-importing an overlapping date range adds nothing twice. Rows matching an existing transaction's date and amount (for example one entered by hand) are flagged and left out unless ticked.
+- **Categories:** suggested from earlier transactions with the same payee, ignoring card-processor and payment-rail prefixes (`SQ *`, `UPI-`, `NEFT CR-`).
+- **Balances:** taken from the file's balance column or OFX balance; otherwise enter one known balance and earlier daily balances are worked out from the transactions.
+- **Undo:** each import can be removed as a unit, with the transactions and balances it added.
+
+Files are read and processed on your machine.
+
 ## Data model
 
 - Amounts are `NUMERIC` in the account's own currency. Balances are stored as displayed (a card owing 500 has balance 500); `accounts.classification` decides whether an account adds to or subtracts from net worth.
@@ -110,7 +125,7 @@ web/
 
 ## Roadmap
 
-1. **MVP:** UI on sample data, then CSV import with saved column mappings per institution
+1. **MVP:** UI on sample data and CSV/OFX import (done); next, transfer matching across accounts and categorisation rules
 2. **Aggregators:** connect accounts through Plaid, SimpleFIN or India's Account Aggregator network, one data source at a time behind a shared importer interface
 3. **Local LLM:** categorisation and questions about your finances answered by a model running on this machine
 

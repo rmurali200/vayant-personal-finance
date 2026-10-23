@@ -149,6 +149,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/imports/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview
+         * @description Reads the file without saving anything: column guesses, every row's status and suggested category.
+         */
+        post: operations["preview_api_imports_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Imports */
+        get: operations["list_imports_api_imports_get"];
+        put?: never;
+        /** Commit */
+        post: operations["commit_api_imports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{import_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Undo Import
+         * @description Removes the import's transactions and the balances it recorded.
+         */
+        delete: operations["undo_import_api_imports__import_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/fx": {
         parameters: {
             query?: never;
@@ -367,6 +425,158 @@ export interface components {
             /** Interest Rate */
             interest_rate: string | null;
         };
+        /** ImportCommit */
+        ImportCommit: {
+            /** Account Id */
+            account_id: number;
+            /** Filename */
+            filename: string;
+            /** Content */
+            content: string;
+            mapping?: components["schemas"]["ImportMapping"] | null;
+            /**
+             * Choices
+             * @default []
+             */
+            choices: components["schemas"]["RowChoice"][];
+            balance?: components["schemas"]["KnownBalance-Input"] | null;
+        };
+        /** ImportFile */
+        ImportFile: {
+            /** Account Id */
+            account_id: number;
+            /** Filename */
+            filename: string;
+            /** Content */
+            content: string;
+            mapping?: components["schemas"]["ImportMapping"] | null;
+        };
+        /** ImportMapping */
+        ImportMapping: {
+            /** Header Row */
+            header_row: number | null;
+            /** Date */
+            date: number;
+            /** Date Format */
+            date_format: string;
+            /** Description */
+            description: number;
+            /** Amount */
+            amount?: number | null;
+            /** Debit */
+            debit?: number | null;
+            /** Credit */
+            credit?: number | null;
+            /** Balance */
+            balance?: number | null;
+            /**
+             * Negate
+             * @default false
+             */
+            negate: boolean;
+        };
+        /** ImportPreview */
+        ImportPreview: {
+            /**
+             * Format
+             * @enum {string}
+             */
+            format: "csv" | "ofx";
+            /** Header */
+            header: string[] | null;
+            /** Columns */
+            columns: number;
+            /** Sample */
+            sample: string[][];
+            mapping: components["schemas"]["ImportMapping"] | null;
+            /** Date Formats */
+            date_formats: string[];
+            /** Profile Used */
+            profile_used: boolean;
+            /** Rows */
+            rows: components["schemas"]["ImportRow"][];
+            /** Skipped */
+            skipped: components["schemas"]["SkippedRow"][];
+            ledger_balance: components["schemas"]["KnownBalance-Output"] | null;
+            /** File Currency */
+            file_currency: string | null;
+        };
+        /** ImportRecord */
+        ImportRecord: {
+            /** Id */
+            id: number;
+            /** Account Id */
+            account_id: number;
+            /** Account Name */
+            account_name: string;
+            /** Filename */
+            filename: string;
+            /** Format */
+            format: string;
+            /** Row Count */
+            row_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
+        /** ImportResult */
+        ImportResult: {
+            /** Id */
+            id: number;
+            /** Inserted */
+            inserted: number;
+            /** Duplicates Skipped */
+            duplicates_skipped: number;
+            /** Balances */
+            balances: number;
+        };
+        /** ImportRow */
+        ImportRow: {
+            /** Hash */
+            hash: string;
+            /** Line */
+            line: number;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Amount */
+            amount: number;
+            /** Description */
+            description: string;
+            /** Balance */
+            balance: number | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "new" | "duplicate" | "possible_duplicate";
+            /** Category Id */
+            category_id: number | null;
+        };
+        /** KnownBalance */
+        "KnownBalance-Input": {
+            /** Amount */
+            amount: number | string;
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+        };
+        /** KnownBalance */
+        "KnownBalance-Output": {
+            /** Amount */
+            amount: number;
+            /**
+             * As Of
+             * Format: date
+             */
+            as_of: string;
+        };
         /** NetWorth */
         NetWorth: {
             /** Currency */
@@ -387,6 +597,22 @@ export interface components {
             liabilities: number;
             /** Net Worth */
             net_worth: number;
+        };
+        /** RowChoice */
+        RowChoice: {
+            /** Hash */
+            hash: string;
+            /** Include */
+            include: boolean;
+            /** Category Id */
+            category_id: number | null;
+        };
+        /** SkippedRow */
+        SkippedRow: {
+            /** Line */
+            line: number;
+            /** Reason */
+            reason: string;
         };
         /** Transaction */
         Transaction: {
@@ -707,6 +933,132 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Goal"][];
+                };
+            };
+        };
+    };
+    preview_api_imports_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportFile"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportPreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_imports_api_imports_get: {
+        parameters: {
+            query?: {
+                account_id?: number | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportRecord"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    commit_api_imports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportCommit"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    undo_import_api_imports__import_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                import_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

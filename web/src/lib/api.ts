@@ -41,3 +41,10 @@ export const qs = (params: Record<string, string | number | undefined | null>) =
   const s = p.toString();
   return s ? `?${s}` : "";
 };
+export type ImportPreview = S["ImportPreview"];
+export type ImportMapping = S["ImportMapping"];
+export type ImportRow = S["ImportRow"];
+export type ImportResult = S["ImportResult"];
+export type ImportRecord = S["ImportRecord"];
+
+export const post = <T,>(path: string, body: unknown) => api<T>(path, { method: "POST", body: JSON.stringify(body) });

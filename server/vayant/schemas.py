@@ -1,9 +1,9 @@
 """Response models. They define the OpenAPI spec the web client's types are generated from."""
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, PlainSerializer
+from pydantic import BaseModel, Field, PlainSerializer
 
 # Exact Decimal on the server; a JSON number for the client, which only displays it.
 Money = Annotated[Decimal, PlainSerializer(float, return_type=float, when_used="json")]
@@ -139,3 +139,85 @@ class Goal(BaseModel):
 class FxRates(BaseModel):
     date: date | None
     per_usd: dict[str, Money]
+
+
+class ImportMapping(BaseModel):
+    header_row: int | None
+    date: int
+    date_format: str
+    description: int
+    amount: int | None = None
+    debit: int | None = None
+    credit: int | None = None
+    balance: int | None = None
+    negate: bool = False
+
+
+class ImportFile(BaseModel):
+    account_id: int
+    filename: str
+    content: str = Field(max_length=10_000_000)
+    mapping: ImportMapping | None = None
+
+
+class RowChoice(BaseModel):
+    hash: str
+    include: bool
+    category_id: int | None
+
+
+class KnownBalance(BaseModel):
+    amount: Money
+    as_of: date
+
+
+class ImportCommit(ImportFile):
+    choices: list[RowChoice] = []
+    balance: KnownBalance | None = None
+
+
+class ImportRow(BaseModel):
+    hash: str
+    line: int
+    date: date
+    amount: Money
+    description: str
+    balance: Money | None
+    status: Literal["new", "duplicate", "possible_duplicate"]
+    category_id: int | None
+
+
+class SkippedRow(BaseModel):
+    line: int
+    reason: str
+
+
+class ImportPreview(BaseModel):
+    format: Literal["csv", "ofx"]
+    header: list[str] | None
+    columns: int
+    sample: list[list[str]]
+    mapping: ImportMapping | None
+    date_formats: list[str]
+    profile_used: bool
+    rows: list[ImportRow]
+    skipped: list[SkippedRow]
+    ledger_balance: KnownBalance | None
+    file_currency: str | None
+
+
+class ImportResult(BaseModel):
+    id: int
+    inserted: int
+    duplicates_skipped: int
+    balances: int
+
+
+class ImportRecord(BaseModel):
+    id: int
+    account_id: int
+    account_name: str
+    filename: str
+    format: str
+    row_count: int
+    created_at: datetime

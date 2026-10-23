@@ -305,7 +305,8 @@ def main():
         migrate(conn)
         if "--reset" in sys.argv:
             conn.execute("""TRUNCATE institutions, accounts, balance_snapshots, transactions, securities,
-                            security_prices, holdings, fx_rates, goals, goal_allocations RESTART IDENTITY CASCADE""")
+                            security_prices, holdings, fx_rates, goals, goal_allocations, imports, import_profiles
+                            RESTART IDENTITY CASCADE""")
         elif conn.execute("SELECT 1 FROM accounts LIMIT 1").fetchone():
             sys.exit("Database already has accounts. Use --reset to replace everything with sample data.")
         n_txn, n_snap = seed(conn)
