@@ -1,0 +1,23 @@
+{
+  "name": "vayant-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "tokens": "node scripts/tokens.mjs",
+    "gen:api": "(cd ../server && .venv/bin/python -m vayant.openapi) > /tmp/vayant-openapi.json && openapi-typescript /tmp/vayant-openapi.json -o src/lib/api-types.ts"
+  },
+  "dependencies": {
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "openapi-typescript": "^7.13.0",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.5"
+  }
+}

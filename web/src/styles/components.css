@@ -1,0 +1,80 @@
+/* From the Vayant design system (components/bundle.css), minus its font import and body rule. */
+
+.vy-muted { color: var(--ink-muted); }
+.vy-eyebrow { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-muted); }
+
+/* section hues: one variable, many parts */
+.vy-sec-net-worth { --sec: var(--net-worth); --sec-soft: var(--surface-inset); }
+.vy-sec-income { --sec: var(--income); --sec-soft: var(--income-soft); }
+.vy-sec-spend { --sec: var(--spend); --sec-soft: var(--spend-soft); }
+.vy-sec-assets { --sec: var(--assets); --sec-soft: var(--assets-soft); }
+.vy-sec-liabilities { --sec: var(--liabilities); --sec-soft: var(--liabilities-soft); }
+.vy-sec-goals { --sec: var(--goals); --sec-soft: var(--goals-soft); }
+
+/* Button */
+.vy-btn { font-family: var(--font-sans); font-weight: 600; border-radius: var(--radius-md); border: 1px solid var(--line-strong); background: var(--surface-raised); color: var(--ink); cursor: pointer; transition: background 150ms ease-out, border-color 150ms ease-out; }
+.vy-btn-md { height: 40px; padding: 0 var(--space-4); font-size: 15px; }
+.vy-btn-sm { height: 32px; padding: 0 var(--space-3); font-size: 13px; }
+.vy-btn-primary { background: var(--brand-strong); border-color: var(--brand-strong); color: var(--on-brand); }
+.vy-btn-primary:hover { filter: brightness(0.9); }
+.vy-btn-secondary:hover { background: var(--surface-inset); }
+.vy-btn-quiet { background: transparent; border-color: transparent; color: var(--brand-strong); }
+.vy-btn-quiet:hover { background: var(--surface-inset); }
+.vy-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.vy-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Amount */
+.vy-amount { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.vy-amount-sm { font-family: var(--font-sans); font-size: 15px; line-height: 22px; font-weight: 500; }
+.vy-amount-md { font-family: var(--font-display); font-size: 22px; line-height: 28px; font-weight: 500; }
+.vy-amount-xl { font-family: var(--font-display); font-size: 40px; line-height: 44px; font-weight: 500; letter-spacing: -0.02em; }
+.vy-tone-positive { color: var(--positive); }
+.vy-tone-negative { color: var(--negative); }
+.vy-tone-warning { color: var(--warning); }
+.vy-tone-net-worth { color: var(--net-worth); }
+.vy-tone-income { color: var(--income); }
+.vy-tone-spend { color: var(--spend); }
+.vy-tone-assets { color: var(--assets); }
+.vy-tone-liabilities { color: var(--liabilities); }
+.vy-tone-goals { color: var(--goals); }
+
+/* SectionTag */
+.vy-tag { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 var(--space-2); border-radius: var(--radius-full); background: var(--sec-soft); color: var(--sec); font-size: 12px; line-height: 16px; font-weight: 600; white-space: nowrap; }
+.vy-tag-dot { width: 6px; height: 6px; border-radius: var(--radius-full); background: currentColor; }
+
+/* Card + MetricCard */
+.vy-card { background: var(--surface-raised); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); padding: var(--space-4) var(--space-6); }
+.vy-metric { display: grid; gap: var(--space-1); min-width: 220px; }
+.vy-metric-top { display: flex; justify-content: space-between; align-items: center; gap: var(--space-2); }
+.vy-metric-value { font-family: var(--font-display); font-size: 22px; line-height: 28px; font-weight: 500; font-variant-numeric: tabular-nums; margin-top: var(--space-1); }
+.vy-metric-value-xl { font-size: 40px; line-height: 44px; letter-spacing: -0.02em; color: var(--net-worth); }
+.vy-metric-delta { font-size: 13px; line-height: 18px; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* Progress */
+.vy-progress { display: grid; gap: 6px; }
+.vy-progress-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-2); }
+.vy-progress-label { font-weight: 600; }
+.vy-progress-figures { font-variant-numeric: tabular-nums; font-weight: 500; }
+.vy-progress-track { height: 8px; border-radius: var(--radius-full); background: var(--track); overflow: hidden; }
+.vy-progress-fill { height: 100%; border-radius: var(--radius-full); background: var(--sec); transition: width 250ms ease-out; }
+.vy-progress-near .vy-progress-fill { background: var(--warning); }
+.vy-progress-over .vy-progress-fill { background: var(--negative); }
+.vy-progress-note { font-size: 13px; line-height: 18px; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.vy-progress-near .vy-progress-note { color: var(--warning); font-weight: 600; }
+.vy-progress-over .vy-progress-note { color: var(--negative); font-weight: 600; }
+
+/* TransactionRow */
+.vy-txn { display: grid; grid-template-columns: 36px 1fr auto; gap: var(--space-3); align-items: center; padding: var(--space-3) 0; border-bottom: 1px solid var(--line); }
+.vy-txn:last-child { border-bottom: 0; }
+.vy-txn-icon { width: 36px; height: 36px; border-radius: var(--radius-full); display: grid; place-items: center; background: var(--sec-soft); color: var(--sec); font-family: var(--font-display); font-weight: 600; font-size: 15px; }
+.vy-txn-main { display: grid; min-width: 0; }
+.vy-txn-merchant { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vy-txn-meta { font-size: 13px; line-height: 18px; color: var(--ink-muted); }
+.vy-txn-amount { text-align: right; }
+
+/* App additions to the design-system components */
+.vy-txn-extra { grid-template-columns: 36px 1fr auto auto; }
+.vy-txn-button { width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line); color: inherit; font: inherit; text-align: left; cursor: pointer; padding-inline: var(--space-2); margin-inline: calc(-1 * var(--space-2)); width: calc(100% + 2 * var(--space-2)); border-radius: var(--radius-sm); }
+.vy-txn-button:hover { background: var(--surface-inset); }
+.vy-txn-button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.vy-metric-value { overflow-wrap: anywhere; }
